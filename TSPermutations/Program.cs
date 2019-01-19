@@ -9,17 +9,21 @@ namespace TSPermutations
 {
     class Program
     {
+        public const int PARALLELISM = 4;
+
         public static int[] Factorials = { 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800 };
 
         public static List<string> permutations = new List<string>();
 
         public static int LengthOfPerm;
 
-        public const int N = 720; //from Factorials[]
+        public static int n = 6;
+
+        public static int N = Factorials[n-1]; //from Factorials[]
 
         public static string PERM = "123456";
 
-        public static List<List<int>> Costs = new List<List<int>>(Factorials[5]); //size of Matrix of Travelling costs
+        public static List<List<int>> Costs = new List<List<int>>(Factorials[n-1]); //size of Matrix of Travelling costs
         static void FindPermutations(string word, List<string> p)
         {
             byte[] array = Encoding.Default.GetBytes(word.ToCharArray());
@@ -48,19 +52,24 @@ namespace TSPermutations
         }
         static int FindWeight()
         {
-            for (int i = 0; i < permutations.Count; i++)
+            Parallel.For(0, PARALLELISM, begin =>
             {
-                for (int j = 0; j < permutations.Count; j++)
+                int from = permutations.Count * begin / PARALLELISM;
+                int to = from + permutations.Count / PARALLELISM;
+                for (int i = from; i < to; i++)
                 {
-                    for (int l = 0; l < LengthOfPerm; l++)
+                    for (int j = 0; j < permutations.Count; j++)
                     {
-                        if (permutations[j].StartsWith(permutations[i].Substring(l)))
+                        for (int l = 0; l < LengthOfPerm; l++)
                         {
-                            Costs[i][j] = l;
+                            if (permutations[j].StartsWith(permutations[i].Substring(l)))
+                            {
+                                Costs[i][j] = l;
+                            }
                         }
                     }
                 }
-            }
+            });
             return 0;
         }
 
@@ -169,6 +178,9 @@ namespace TSPermutations
             Console.WriteLine("Длина кратчайшей перестановки: {0}", (FindShortestWay()+LengthOfPerm).ToString());
             clock.Stop();
             Console.WriteLine("\nСуперперестановка: " + PERM + "\n\nЗатраченное время: {0}", clock.Elapsed);
+
+            RecursiveAlg.RunRecursiveAlg(n);
+
             Console.ReadLine();
         }
     }
